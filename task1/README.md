@@ -1,7 +1,7 @@
 Классическая сборка
 
-cd build
-cmake ..
+cd build ->
+cmake .. ->
 make
 
 далее, не выходя из build:
