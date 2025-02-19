@@ -1,0 +1,4 @@
+/home/babrakadabra/second_course/Parallelizm_NSU/task1/build/CMakeFiles/float.dir
+/home/babrakadabra/second_course/Parallelizm_NSU/task1/build/CMakeFiles/double.dir
+/home/babrakadabra/second_course/Parallelizm_NSU/task1/build/CMakeFiles/edit_cache.dir
+/home/babrakadabra/second_course/Parallelizm_NSU/task1/build/CMakeFiles/rebuild_cache.dir
