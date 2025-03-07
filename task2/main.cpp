@@ -81,6 +81,7 @@ int task1(){
             result_accelerations[str_id][col_id] = sequentiall_time / time;
             
             col_id++;
+            cout << "Стадия: " << cur_size << ", " << threads_num << endl;
         }
         str_id++;
     }
