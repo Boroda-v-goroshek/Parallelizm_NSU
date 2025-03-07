@@ -105,12 +105,76 @@ int task1(){
     return 0;
 }
 
-int task2(){
+double f(double x){
+    return x * x * x * x * x;
+}
 
+int task2(){
+    set<int> threads = {1,2,4,7,8};
+    int steps = 200000000;
+
+    vector<double> result_times = vector<double> (threads.size());
+    vector<double> result_accelerations = vector<double> (threads.size());
+
+    int id = 0;
+
+    for (auto threads_num : threads){
+        double sequentiall_time;
+
+        omp_set_num_threads(threads_num);
+
+        double a = 1.0;
+        double b = 4.0;
+        double h = (b - a) / steps;
+
+        double sum = 0.0;
+
+        auto start = omp_get_wtime();
+        #pragma omp parallel
+        {
+            double local_sum = 0.0;
+            
+            #pragma omp for
+            for (int i = 0; i < steps; i++){
+                double x = a + i * h;
+                local_sum += f(x);
+            }
+
+            #pragma omp atomic
+            sum += local_sum * h;
+
+        }
+        auto end = omp_get_wtime();
+        auto time = end - start;
+
+        result_times[id] = time;
+        if (threads_num == 1)
+            sequentiall_time = time;
+        result_accelerations[id] = sequentiall_time / time;
+
+
+        id++;
+        cout << "Стадия: " << threads_num << endl;
+    }
+
+    for (int j = 0; j < threads.size(); j++){
+        cout << result_times[j] << ' ';
+    }
+    cout << endl;
+
+    cout << "----------"<< endl;
+
+    for (int j = 0; j < threads.size(); j++){
+        cout << result_accelerations[j] << ' ';
+    }
+    cout << endl;
+    
+
+    return 0;
 }
 
 int main(){
-    task1();
+    task2();
 
     return 0;
 }
