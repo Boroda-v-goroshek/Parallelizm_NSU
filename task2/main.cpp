@@ -110,7 +110,7 @@ double f(double x){
 }
 
 int task2(){
-    set<int> threads = {1,2,4,7,8};
+    set<int> threads = {1,2,4,7,8,16,20,40};
     int steps = 200000000;
 
     vector<double> result_times = vector<double> (threads.size());
