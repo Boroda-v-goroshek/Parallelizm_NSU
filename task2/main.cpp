@@ -10,7 +10,7 @@
 using namespace std;
 int task1(){
 
-    set<int> threads = {1,2,4,7,8,16};
+    set<int> threads = {1,2,4,7,8,16,20,40};
     set<int> size = {20000, 40000};
 
     vector<vector<double>> result_times = vector<vector<double>> (size.size());
@@ -105,8 +105,12 @@ int task1(){
     return 0;
 }
 
+int task2(){
+
+}
+
 int main(){
-    task1();
+    task2();
 
     return 0;
 }
