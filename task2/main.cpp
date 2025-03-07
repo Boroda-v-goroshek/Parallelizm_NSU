@@ -110,7 +110,7 @@ int task2(){
 }
 
 int main(){
-    task2();
+    task1();
 
     return 0;
 }
