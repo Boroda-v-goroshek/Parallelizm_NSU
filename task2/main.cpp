@@ -4,6 +4,7 @@
 #include <set>
 #include <chrono>
 #include <random>
+#include <cmath>
 
 #include <omp.h>
 
@@ -173,8 +174,161 @@ int task2(){
     return 0;
 }
 
+double ex3_1(vector<vector<double>> A, vector<double> x0, double t = 0.01, vector<double> b, int threads_num){
+    omp_set_num_threads(threads_num);
+
+    int N = x0.size();
+    double eps = 0.01, mod = 100000.0;
+    vector<double> x = x0;
+    vector<double> x_new = x0;
+
+    auto start = omp_get_wtime();
+    while(mod > eps) {
+        vector<double> Ax(N);
+        double local_sum = 0.0;
+
+        #pragma omp parallel for
+        for (int i = 0; i < N; ++i) {
+            double temp_sum = 0.0; // Временная сумма для текущего потока
+            for (int j = 0; j < N; ++j) {
+                temp_sum += A[i][j] * x[j]; 
+            }
+            Ax[i] = temp_sum + b[i]; 
+        }
+
+        // Теперь собираем суммарный модуль из локальных значений
+        #pragma omp for parallel reduction(+:local_sum)
+        for (int i = 0; i < N; ++i) {
+            local_sum += pow(Ax[i], 2);
+        }
+
+        mod = sqrt(local_sum);
+
+        vector<double> tAxPlusB(N);
+        #pragma omp parallel for
+        for (size_t i = 0; i < N; ++i) {
+            tAxPlusB[i] = x[i] * t; 
+        }
+        
+        #pragma omp parallel for
+        for (size_t i = 0; i < N; ++i) {
+            x_new[i] = x[i] - tAxPlusB[i]; 
+        }
+
+        x = x_new;
+    }
+    auto end = omp_get_wtime();
+    return end - start;
+}
+
+double ex3_2(vector<vector<double>> A, vector<double> x0, double t = 0.01, vector<double> b, int threads_num){
+    omp_set_num_threads(threads_num);
+
+    int N = x0.size();
+    double eps = 0.01, mod = 100000.0;
+    vector<double> x = x0;
+    vector<double> x_new = x0;
+
+    auto start = omp_get_wtime();
+
+    #pragma omp parallel
+    while(mod > eps) {
+        vector<double> Ax(N); // Локальный вектор Ax для каждого потока
+        double local_sum = 0.0; // Локальная сумма для каждого потока
+
+        #pragma omp for
+        for (int i = 0; i < N; ++i) {
+            double temp_sum = 0.0; // Временная сумма для текущего потока
+            for (int j = 0; j < N; ++j) {
+                temp_sum += A[i][j] * x[j]; 
+            }
+            Ax[i] = temp_sum + b[i]; 
+        }
+
+        // Теперь собираем суммарный модуль из локальных значений
+        #pragma omp for reduction(+:local_sum)
+        for (int i = 0; i < N; ++i) {
+            local_sum += pow(Ax[i], 2);
+        }
+
+        // Синхронизируем
+        #pragma omp single
+        {
+            mod = sqrt(local_sum);
+        }
+
+        vector<double> tAxPlusB(N);
+        #pragma omp for
+        for (size_t i = 0; i < N; ++i) {
+            tAxPlusB[i] = x[i] * t; 
+        }
+        
+        #pragma omp for
+        for (size_t i = 0; i < N; ++i) {
+            x_new[i] = x[i] - tAxPlusB[i]; 
+        }
+
+        // Синхронизируем
+        #pragma omp single
+        {
+            x = x_new; 
+        }
+    }
+    auto end = omp_get_wtime();
+    return end - start;
+}
+
+int task3(){
+
+    int N = 3000;
+    vector<double> x0 = vector<double>(N);
+    vector<vector<double>> A = vector<vector<double>>(N);
+    for (int i = 0; i < N; i++){
+        A[i] = vector<double>(N);
+    }
+    vector<double> b = vector<double>(N);
+
+    // Инициализация
+    #pragma omp parallel
+    {    
+        random_device rd;
+        mt19937 gen(rd());
+        uniform_real_distribution<double> distribution(-1.0, 1.0);
+        #pragma omp for
+        for (int i = 0; i < N; ++i){
+            x0[i] = distribution(gen);
+            b[i] = N + 1;
+            for (int j = 0; j < N; j++){
+                A[i][j] = 1;
+                if (i == j)
+                    A[i][j]++;
+            }
+        }
+        
+    }
+    double t = 0.01;
+    double sequential_time1, sequential_time2;
+
+    set<int> threads = {1, 2, 4, 8, 16, 20, 40};
+    for (auto threads_num : threads){
+        double time1 = ex3_1(A, x0, t, b, threads_num);
+        double time2 = ex3_2(A, x0, t, b, threads_num);
+
+        if (threads_num == 1){
+            sequential_time1 = time1;
+            sequential_time2 = time2;
+        }
+
+        double accelerate1 = sequential_time1 / time1;
+        double accelerate2 = sequential_time2 / time2;
+
+        cout << threads_num << " : " << accelerate1 << accelerate2 << endl;
+    }
+    return 0;
+}
+
 int main(){
-    task2();
+    task3();
 
     return 0;
 }
