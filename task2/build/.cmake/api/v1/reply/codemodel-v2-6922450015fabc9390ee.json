@@ -45,12 +45,12 @@
 	"kind" : "codemodel",
 	"paths" : 
 	{
-		"build" : "/home/babrakadabra/second_course/Parallelizm_NSU/task2/build",
-		"source" : "/home/babrakadabra/second_course/Parallelizm_NSU/task2"
+		"build" : "/home/n.shestakov/Parallelizm_NSU/task2/build",
+		"source" : "/home/n.shestakov/Parallelizm_NSU/task2"
 	},
 	"version" : 
 	{
 		"major" : 2,
-		"minor" : 6
+		"minor" : 3
 	}
 }

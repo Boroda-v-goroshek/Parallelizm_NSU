@@ -1,1 +1,1 @@
-g++  -fopenmp -O2 -g -rdynamic CMakeFiles/main.dir/main.cpp.o -o main 
+g++  -fopenmp -O2 CMakeFiles/main.dir/main.cpp.o -o main 

@@ -1,3 +1,3 @@
-/home/babrakadabra/second_course/Parallelizm_NSU/task2/build/CMakeFiles/main.dir
-/home/babrakadabra/second_course/Parallelizm_NSU/task2/build/CMakeFiles/edit_cache.dir
-/home/babrakadabra/second_course/Parallelizm_NSU/task2/build/CMakeFiles/rebuild_cache.dir
+/home/n.shestakov/Parallelizm_NSU/task2/build/CMakeFiles/main.dir
+/home/n.shestakov/Parallelizm_NSU/task2/build/CMakeFiles/edit_cache.dir
+/home/n.shestakov/Parallelizm_NSU/task2/build/CMakeFiles/rebuild_cache.dir

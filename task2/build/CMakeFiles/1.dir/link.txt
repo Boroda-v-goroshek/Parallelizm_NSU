@@ -1,1 +1,0 @@
-g++  -fopenmp -O2 -g -rdynamic CMakeFiles/1.dir/1.cpp.o -o 1 

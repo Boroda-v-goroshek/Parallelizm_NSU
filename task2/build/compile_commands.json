@@ -1,8 +1,7 @@
 [
 {
-  "directory": "/home/babrakadabra/second_course/Parallelizm_NSU/task2/build",
-  "command": "g++    -fopenmp -O2 -g -o CMakeFiles/main.dir/main.cpp.o -c /home/babrakadabra/second_course/Parallelizm_NSU/task2/main.cpp",
-  "file": "/home/babrakadabra/second_course/Parallelizm_NSU/task2/main.cpp",
-  "output": "CMakeFiles/main.dir/main.cpp.o"
+  "directory": "/home/n.shestakov/Parallelizm_NSU/task2/build",
+  "command": "g++  -fopenmp -O2 -g -o CMakeFiles/main.dir/main.cpp.o -c /home/n.shestakov/Parallelizm_NSU/task2/main.cpp",
+  "file": "/home/n.shestakov/Parallelizm_NSU/task2/main.cpp"
 }
 ]

@@ -174,145 +174,113 @@ int task2(){
     return 0;
 }
 
-double ex3_1(vector<vector<double>> A, vector<double> x0, double t = 0.01, vector<double> b, int threads_num){
+double ex3_1(const int N, const double eps, double t, int threads_num) {
     omp_set_num_threads(threads_num);
 
-    int N = x0.size();
-    double eps = 0.01, mod = 100000.0;
-    vector<double> x = x0;
-    vector<double> x_new = x0;
+    std::vector<double> x(N);
+    std::vector<double> Ax(N);
+    std::vector<double> b(N);
 
-    auto start = omp_get_wtime();
-    while(mod > eps) {
-        vector<double> Ax(N);
-        double local_sum = 0.0;
-
-        #pragma omp parallel for
-        for (int i = 0; i < N; ++i) {
-            double temp_sum = 0.0; // Временная сумма для текущего потока
-            for (int j = 0; j < N; ++j) {
-                temp_sum += A[i][j] * x[j]; 
-            }
-            Ax[i] = temp_sum + b[i]; 
-        }
-
-        // Теперь собираем суммарный модуль из локальных значений
-        #pragma omp for parallel reduction(+:local_sum)
-        for (int i = 0; i < N; ++i) {
-            local_sum += pow(Ax[i], 2);
-        }
-
-        mod = sqrt(local_sum);
-
-        vector<double> tAxPlusB(N);
-        #pragma omp parallel for
-        for (size_t i = 0; i < N; ++i) {
-            tAxPlusB[i] = x[i] * t; 
-        }
-        
-        #pragma omp parallel for
-        for (size_t i = 0; i < N; ++i) {
-            x_new[i] = x[i] - tAxPlusB[i]; 
-        }
-
-        x = x_new;
+    double time = omp_get_wtime();
+    #pragma omp parallel for
+    for (int i = 0; i < N; ++i) {
+        b[i] = N + 1; 
     }
-    auto end = omp_get_wtime();
-    return end - start;
+
+    while (true) {
+        double max_diff = 0.0;
+
+        // Параллельный цикл для вычисления Ax
+        #pragma omp parallel for
+        for (int i = 0; i < N; ++i) {
+            Ax[i] = 0.0; // Сброс значения Ax
+            for (int j = 0; j < N; ++j) {
+                Ax[i] += (i == j ? 2.0 : 1.0) * x[j]; // A[i][j] = 2 если i==j, иначе 1
+            }
+            Ax[i] = Ax[i] - b[i];
+        }
+
+        // Параллельный цикл для обновления x и поиска max_diff
+        #pragma omp parallel for reduction(max:max_diff)
+        for (int i = 0; i < N; ++i) {
+            double new_value = x[i] - t * Ax[i];
+            max_diff = std::max(max_diff, std::abs(new_value - x[i]));
+            x[i] = new_value;
+        }
+
+        if (max_diff < eps) {
+            break;
+        }
+    }
+
+    time = omp_get_wtime() - time;
+    return time;
 }
 
-double ex3_2(vector<vector<double>> A, vector<double> x0, double t = 0.01, vector<double> b, int threads_num){
+double ex3_2(const int N, const double eps, double t, int threads_num) {
     omp_set_num_threads(threads_num);
 
-    int N = x0.size();
-    double eps = 0.01, mod = 100000.0;
-    vector<double> x = x0;
-    vector<double> x_new = x0;
+    std::vector<double> x(N);
+    std::vector<double> Ax(N);
+    std::vector<double> b(N);
 
-    auto start = omp_get_wtime();
-
+    double time = omp_get_wtime();
     #pragma omp parallel
-    while(mod > eps) {
-        vector<double> Ax(N); // Локальный вектор Ax для каждого потока
-        double local_sum = 0.0; // Локальная сумма для каждого потока
+    {
 
         #pragma omp for
         for (int i = 0; i < N; ++i) {
-            double temp_sum = 0.0; // Временная сумма для текущего потока
-            for (int j = 0; j < N; ++j) {
-                temp_sum += A[i][j] * x[j]; 
+            b[i] = N + 2;
+        }
+
+        while (true) {
+            double max_diff = 0.0;
+
+            // Параллельный цикл для вычисления Ax
+            #pragma omp for
+            for (int i = 0; i < N; ++i) {
+                Ax[i] = 0.0; 
+                for (int j = 0; j < N; ++j) {
+                    Ax[i] += (i == j ? 2.0 : 1.0) * x[j]; // A[i][j] = 2 если i==j, иначе 1
+                }
+                Ax[i] = Ax[i] - b[i]; // A*x_n - b
             }
-            Ax[i] = temp_sum + b[i]; 
-        }
 
-        // Теперь собираем суммарный модуль из локальных значений
-        #pragma omp for reduction(+:local_sum)
-        for (int i = 0; i < N; ++i) {
-            local_sum += pow(Ax[i], 2);
-        }
+            double local_max_diff = 0.0;
+            // Параллельный цикл для обновления x и поиска max_diff
+            #pragma omp for
+            for (int i = 0; i < N; ++i) {
+                double new_value = x[i] - t * Ax[i];
+                local_max_diff = std::max(local_max_diff, std::abs(new_value - x[i])); // Обновление локального max_diff
+                x[i] = new_value;
+            }
 
-        // Синхронизируем
-        #pragma omp single
-        {
-            mod = sqrt(local_sum);
-        }
-
-        vector<double> tAxPlusB(N);
-        #pragma omp for
-        for (size_t i = 0; i < N; ++i) {
-            tAxPlusB[i] = x[i] * t; 
-        }
-        
-        #pragma omp for
-        for (size_t i = 0; i < N; ++i) {
-            x_new[i] = x[i] - tAxPlusB[i]; 
-        }
-
-        // Синхронизируем
-        #pragma omp single
-        {
-            x = x_new; 
+            #pragma omp critical
+            {
+                max_diff = std::max(max_diff, local_max_diff);
+            }
+            if (max_diff < eps) {
+                break;
+            }
         }
     }
-    auto end = omp_get_wtime();
-    return end - start;
+
+    time = omp_get_wtime() - time;
+    return time;
 }
+
 
 int task3(){
 
-    int N = 3000;
-    vector<double> x0 = vector<double>(N);
-    vector<vector<double>> A = vector<vector<double>>(N);
-    for (int i = 0; i < N; i++){
-        A[i] = vector<double>(N);
-    }
-    vector<double> b = vector<double>(N);
-
-    // Инициализация
-    #pragma omp parallel
-    {    
-        random_device rd;
-        mt19937 gen(rd());
-        uniform_real_distribution<double> distribution(-1.0, 1.0);
-        #pragma omp for
-        for (int i = 0; i < N; ++i){
-            x0[i] = distribution(gen);
-            b[i] = N + 1;
-            for (int j = 0; j < N; j++){
-                A[i][j] = 1;
-                if (i == j)
-                    A[i][j]++;
-            }
-        }
-        
-    }
-    double t = 0.01;
+    int N = 50000;
+    double t = 0.1;
+    double eps = 1e-5;
     double sequential_time1, sequential_time2;
 
     set<int> threads = {1, 2, 4, 8, 16, 20, 40};
     for (auto threads_num : threads){
-        double time1 = ex3_1(A, x0, t, b, threads_num);
-        double time2 = ex3_2(A, x0, t, b, threads_num);
+        double time1 = ex3_1(N, t, eps, threads_num);
+        double time2 = ex3_2(N, t, eps, threads_num);
 
         if (threads_num == 1){
             sequential_time1 = time1;
@@ -322,7 +290,7 @@ int task3(){
         double accelerate1 = sequential_time1 / time1;
         double accelerate2 = sequential_time2 / time2;
 
-        cout << threads_num << " : " << accelerate1 << accelerate2 << endl;
+        cout << threads_num << " : " << accelerate1 << " " << accelerate2 << endl;
     }
     return 0;
 }
